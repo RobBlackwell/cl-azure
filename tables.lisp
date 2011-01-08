@@ -12,7 +12,7 @@
 	       (string #\Linefeed) 
 	       canonicalized-resource))
 
-(defun table-storage-request (method resource &optional (account *storage-account*))
+(defun table-storage-request (method resource &key (account *storage-account*) (content nil))
   "Makes an HTTP request to the Table storage API"
   (let* ((date (rfc1123-date-time-string))
 	 (headers (list 
@@ -22,12 +22,15 @@
 										    (canonicalise-resource resource account))))
 		   (cons "x-ms-date" date)
 		   (cons "x-ms-version" "2009-09-19")
+		   
 		   (cons "DataServiceVersion" "1.0;NetFx") ; Needed for 2009-09-19
 		   (cons "MaxDataServiceVersion" "2.0;NetFx") ; Needed for 2009-09-19
-		   )))
+		   )))   
 
     (drakma:http-request (concatenate 'string (table-storage-url account) resource)
 			 :method method
+			 :content content
+			 :content-type "application/atom+xml"
 			 :additional-headers headers)))
 
 (defun extract-tables (response)
@@ -36,7 +39,7 @@
 
 (defun query-tables-raw (&key (account *storage-account*))
   "Makes a Query Tables REST call to Azure Table Storage"
-  (table-storage-request :get "/Tables()" account))
+  (table-storage-request :get "/Tables()" :account account))
 
 (defun query-tables (&key (account *storage-account*))
   "Enumerates the tables in a storage account"
@@ -60,7 +63,7 @@
 			   (filter nil))
   "Makes a Query Entities REST call to Azure Table Storage"
   (let ((filter-expression (if filter (format nil "?$filter=~a" filter) "")))
-    (table-storage-request :get (concatenate 'string "/" table-name "()" filter-expression) account)))
+    (table-storage-request :get (concatenate 'string "/" table-name "()" filter-expression) :account account)))
 
 (defun query-entities (table-name &key (account *storage-account*)
 		       (partition-key nil) 
@@ -72,3 +75,47 @@
 				  :partition-key partition-key 
 				  :row-key row-key 
 				  :filter filter)))
+
+(defparameter *create-table-tempate*
+  "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>   
+  <entry xmlns:d=\"http://schemas.microsoft.com/ado/2007/08/dataservices\" 
+    xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\"
+    xmlns=\"http://www.w3.org/2005/Atom\"> 
+    <title /> 
+    <updated>2009-03-18T11:48:34.9840639-07:00</updated> 
+    <author>
+      <name/> 
+    </author> 
+      <id/> 
+      <content type=\"application/xml\">
+        <m:properties>
+          <d:TableName>~a</d:TableName>
+        </m:properties>
+      </content> 
+    </entry>")
+
+(defun create-table-raw (table-name &key (account *storage-account*))
+  "The Create Table operation creates a new table in the storage account."
+  (table-storage-request :post "/Tables" :account account :content (format nil *create-table-tempate* table-name)))
+
+(defun create-table (table-name &key (account *storage-account*))
+  "Creates a table withte gie name, returns T on success, nil otherwise"
+(multiple-value-bind (body status)
+      (create-table-raw table-name :account account)
+    (eql status 201)))
+
+(defun ensure-table (table-name &key (account *storage-account*))
+  "Ensures the table exists, if necessary creating it"
+  (multiple-value-bind (body status)
+      (create-table-raw table-name :account account)
+    (when (member status '(201 409)) status)))
+
+(defun delete-table-raw (table-name &key (account *storage-account*))
+  "The Delete Table operation deletes the specified table and any data it contains."
+  (table-storage-request :delete (format nil "/Tables('~a')" table-name) :account account ))
+
+(defun delete-table (table-name &key (account *storage-account*))
+  "Deletes the specified table and any data it contains, return T on success, NIL otherwise"
+  (multiple-value-bind (body status)
+      (delete-table-raw table-name :account account)
+    (eql status 204)))

@@ -7,6 +7,9 @@
   ;; Tables
   (:export
    #:query-tables
+   #:create-table
+   #:ensure-table
+   #:delete-table
    #:query-entities)
   ;; Blobs
   (:export

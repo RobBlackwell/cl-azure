@@ -9,10 +9,10 @@
 (defun blob-service-string-to-sign (method canonicalised-headers canonicalised-resource)
   "Returns the string to sign for the Blob service (Shared Key Lite Authentication)"
   (concatenate 'string method 
-	       (string #\Linefeed) 
-	       (string #\Linefeed)
-	       (string #\Linefeed) 
-	       (string #\Linefeed)
+	       +linefeed+ 
+	       +linefeed+
+	       +linefeed+ 
+	       +linefeed+
 	       canonicalised-headers
 	       canonicalised-resource))
 

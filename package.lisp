@@ -2,6 +2,7 @@
 
 (defpackage #:cl-azure
   (:use #:cl)
+  (:shadow "DEFCONSTANT")
   (:export
    #:*storage-account*)
   ;; Tables

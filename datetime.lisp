@@ -3,11 +3,11 @@
 
 (in-package #:cl-azure)
 
-(defparameter +day-names+
-    '("Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun"))
+(defconstant +day-names+
+    #("Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun"))
 
-(defparameter +month-names+
-    '("Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"))
+(defconstant +month-names+
+    #("Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"))
 
 (defun rfc1123-date-time-string (&optional (time (get-universal-time)))
   "Returns RFC1123 compliant dates, e.g. Sun, 11 Oct 2009 21:49:13 GMT"
@@ -15,9 +15,9 @@
 	(second minute hour date month year day-of-week)
       (decode-universal-time time 0)
     (format nil "~a, ~2,'0d ~a ~a ~2,'0d:~2,'0d:~2,'0d GMT"
-	    (nth day-of-week +day-names+)
+	    (aref +day-names+ day-of-week)
 	    date
-	    (nth (1- month) +month-names+)
+	    (aref +month-names+ (1- month))
 	    year
 	    hour
 	    minute

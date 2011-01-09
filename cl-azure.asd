@@ -12,6 +12,8 @@
                #:trivial-utf-8
 	       #:puri)
   :components ((:file "package")
+	       (:file "util")
+	       (:file "http")
 	       (:file "xml")
 	       (:file "datetime")
                (:file "account")

@@ -9,7 +9,7 @@
 (defun table-service-string-to-sign (date-time canonicalized-resource)
   "Returns the string to sign for the Table service (Shared Key Lite Authentication)"
   (concatenate 'string date-time 
-	       (string #\Linefeed) 
+	       +linefeed+ 
 	       canonicalized-resource))
 
 (defun table-storage-request (method resource &key (account *storage-account*) (content nil))
@@ -102,13 +102,13 @@
   "Creates a table withte gie name, returns T on success, nil otherwise"
 (multiple-value-bind (body status)
       (create-table-raw table-name :account account)
-    (eql status 201)))
+    (eql status +http-created+)))
 
 (defun ensure-table (table-name &key (account *storage-account*))
   "Ensures the table exists, if necessary creating it"
   (multiple-value-bind (body status)
       (create-table-raw table-name :account account)
-    (when (member status '(201 409)) status)))
+    (when (member status (list +http-created+ +http-conflict+)) status)))
 
 (defun delete-table-raw (table-name &key (account *storage-account*))
   "The Delete Table operation deletes the specified table and any data it contains."
@@ -118,4 +118,4 @@
   "Deletes the specified table and any data it contains, return T on success, NIL otherwise"
   (multiple-value-bind (body status)
       (delete-table-raw table-name :account account)
-    (eql status 204)))
+    (eql status +http-no-content+)))

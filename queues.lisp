@@ -8,7 +8,7 @@
 
 (defun queue-service-string-to-sign (method canonicalised-headers canonicalised-resource)
   "Returns the string to sign for the Queue service (Shared Key Lite Authentication)"
-  (concatenate 'string method 
+  (concatenate 'string (symbol-name method) 
 	       +linefeed+ 
 	       +linefeed+
 	       +linefeed+ 
@@ -23,7 +23,7 @@
 		   (authorization-header (account-name account)
 					 (hmac-string (account-key account) 
 						      (queue-service-string-to-sign 
-						       "GET" 
+						       method 
 						       (canonicalised-headers date)
 						       (canonicalise-resource resource account))))
 		   (cons "x-ms-date" date)
@@ -40,10 +40,6 @@
   "Makes a list-queues REST call to Azure Queue Storage"
   (queue-storage-request :get "/?comp=list" account))
 
-(defun extract-queues (response)
-  "Extracts a list of queues from an ADO.NET entity set Atom feed"
-  (extract-named-elements response "Name"))
-
 (defun list-queues (&key (account *storage-account*))
   "Enumerates the queues in a storage account"
-  (extract-queues (list-queues-raw :account account)))
+  (extract-named-elements (list-queues-raw :account account) "Name"))

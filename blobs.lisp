@@ -8,7 +8,7 @@
 
 (defun blob-service-string-to-sign (method canonicalised-headers canonicalised-resource)
   "Returns the string to sign for the Blob service (Shared Key Lite Authentication)"
-  (concatenate 'string method 
+  (concatenate 'string (symbol-name method) 
 	       +linefeed+ 
 	       +linefeed+
 	       +linefeed+ 
@@ -23,7 +23,7 @@
 		   (authorization-header (account-name account)
 					 (hmac-string (account-key account) 
 						      (blob-service-string-to-sign 
-						       "GET" 
+						       method 
 						       (canonicalised-headers date)
 						       (canonicalise-resource resource account))))
 		   (cons "x-ms-date" date)
@@ -40,22 +40,14 @@
   "Makes a list-containers REST call to Azure Blob Storage"
   (blob-storage-request :get "/?comp=list" account))
 
-(defun extract-containers (response)
-  "Extracts a list of containers from an ADO.NET entity set Atom feed"
-  (extract-named-elements response "Name"))
-
 (defun list-containers (&key (account *storage-account*))
   "Enumerates the containers in a storage account"
-  (extract-containers (list-containers-raw :account account)))
+  (extract-named-elements (list-containers-raw :account account) "Name"))
 
 (defun list-blobs-raw (container &key (account *storage-account*))
   "Makes a list-blobs REST call to Azure Blob Storage"
   (blob-storage-request :get (concatenate 'string "/" container "?restype=container&comp=list") account))
 
-(defun extract-blobs (response)
-  "Extracts a list of blobs from an ADO.NET entity set Atom feed"
-  (extract-named-elements response "Name"))
-
 (defun list-blobs (blob &key (account *storage-account*))
   "Enumerates the blobs in a storage account"
-  (extract-blobs (list-blobs-raw blob :account account)))
+  (extract-named-elements (list-blobs-raw blob :account account) "Name"))

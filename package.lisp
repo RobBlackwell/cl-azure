@@ -15,5 +15,8 @@
   ;; Blobs
   (:export
    #:list-containers
-   #:list-blobs))
+   #:list-blobs)
+  ;; Queues
+  (:export
+   #:list-queues))
 

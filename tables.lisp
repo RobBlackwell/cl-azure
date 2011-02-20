@@ -76,7 +76,7 @@
 				  :row-key row-key 
 				  :filter filter)))
 
-(defparameter *create-table-tempate*
+(defparameter *create-table-template*
   "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>   
   <entry xmlns:d=\"http://schemas.microsoft.com/ado/2007/08/dataservices\" 
     xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\"
@@ -96,7 +96,7 @@
 
 (defun create-table-raw (table-name &key (account *storage-account*))
   "The Create Table operation creates a new table in the storage account."
-  (table-storage-request :post "/Tables" :account account :content (format nil *create-table-tempate* table-name)))
+  (table-storage-request :post "/Tables" :account account :content (format nil *create-table-template* table-name)))
 
 (defun create-table (table-name &key (account *storage-account*))
   "Creates a table withte gie name, returns T on success, nil otherwise"
@@ -119,3 +119,47 @@
   (multiple-value-bind (body status)
       (delete-table-raw table-name :account account)
     (eql status +http-no-content+)))
+
+(defparameter *insert-entity-template*
+  "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>
+<entry xmlns:d=\"http://schemas.microsoft.com/ado/2007/08/dataservices\" xmlns:m=\"http://schemas.microsoft.com/ado/2007/08/dataservices/metadata\" xmlns=\"http://www.w3.org/2005/Atom\">
+  <title />
+  <updated>~a</updated>
+  <author>
+    <name />
+  </author>
+  <id />
+  <content type=\"application/xml\">
+    <m:properties>
+~a
+    </m:properties>
+  </content>
+</entry>")
+
+(defun stringify (x)
+  (if (symbolp x)
+      (symbol-name x)
+      x))
+
+(defun type-xml (type)
+  (if type
+      (format nil " m:type=\"~a\"" (stringify type))
+      ""))
+
+(defun property-xml (name value &optional (type nil))
+    (let ((tag-name (stringify name)))
+      (format nil "<d:~a~a>~a</d:~a>" tag-name (type-xml type) value tag-name)))
+
+(defun properties-xml (entity)
+  (with-output-to-string (stream)
+    (dolist (property entity)
+      (format stream (property-xml (first property) (second property) (third property))))))
+
+(defun entity-content (entity)
+  (format nil *insert-entity-template* (iso8601-date-time-string) (properties-xml entity)))
+  
+(defun insert-entity-raw (table-name entity &key (account *storage-account*))
+  "The Insert Entity operation inserts a new entity into a table"
+  (table-storage-request :post (format nil "/~a" table-name) :account account :content (entity-content entity)))
+
+;; (insert-entity-raw "People" '((|PartitionKey| 3)(|RowKey| 4)("Name" "Robert") ("Age" 21 |Edm.Int32|)))

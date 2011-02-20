@@ -16,7 +16,7 @@
       (t (find-next-child source flag)))))
 
 (defun extract-named-elements (doc name)
-  "Extracts a list of all values from elements named name withinan XML document doc"
+  "Extracts a list of all values from elements named name within an XML document doc"
   (let ((source (cxml:make-source doc)))
     (loop 
        while (klacks:find-element source name)

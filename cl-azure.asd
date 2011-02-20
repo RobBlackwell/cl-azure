@@ -16,6 +16,7 @@
 	       (:file "http")
 	       (:file "xml")
 	       (:file "datetime")
+	       (:file "edm")
                (:file "account")
 	       (:file "request")
 	       (:file "tables")

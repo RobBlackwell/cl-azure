@@ -20,5 +20,6 @@
                (:file "account")
 	       (:file "request")
 	       (:file "tables")
-	       (:file "blobs")))
+	       (:file "blobs")
+	       (:file "queues")))
 

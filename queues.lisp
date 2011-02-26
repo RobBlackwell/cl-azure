@@ -6,6 +6,19 @@
 ;;; See Windows Azure Storage Services REST API Reference
 ;;; http://msdn.microsoft.com/en-us/library/dd179355.aspx
 
+;; Define a protocol for queue messages
+
+(defgeneric message-id (message))
+(defgeneric pop-receipt (message))
+
+;; Default implementation for queue messages is a plist
+
+(defmethod message-id ((message cons))
+  (getf message :|MessageId|))
+
+(defmethod pop-receipt ((message cons))
+  (getf message :|PopReceipt|))
+
 (defun queue-service-string-to-sign (method canonicalised-headers canonicalised-resource)
   "Returns the string to sign for the Queue service (Shared Key Lite Authentication)"
   (concatenate 'string (symbol-name method) 
@@ -28,7 +41,8 @@
 						       (canonicalise-resource resource account))))
 		   (cons "x-ms-date" date)
 		   (cons "x-ms-version" "2009-09-19")
-		   (if (eq method :put)(cons "content-length" "0")) ;; PUT needs this to be set explicitly for some reason?
+		   (when (eq method :put) 
+		     (cons "content-length" "0")) ;; PUT needs this to be set explicitly for some reason?
 		   ))))
 
     (drakma:http-request (concatenate 'string (queue-storage-url account) resource)
@@ -65,14 +79,22 @@
       (delete-queue-raw queue-name :account account)
     (eql status +http-no-content+)))
 
-;; get-queue-metadata - UNTESTED
+(defun get-queue-metadata-raw (queue-name &key (account *storage-account*))
+  "The Get Queue Metadata operation retrieves user-defined metadata and queue properties on the specified queue. Metadata is associated with the queue as name-values pairs."
+  (queue-storage-request :get (format nil "/~a?comp=metadata" queue-name) :account account))
 
-;(defun get-queue-metadata-raw (queue-name &key (account *storage-account*))
-;  "The Get Queue Metadata operation retrieves user-defined metadata and queue properties on the specified queue. Metadata is associated with the queue as name-values pairs."
-;  (queue-storage-request :get (format nil "/~a?comp=metadata" queue-name) :account account))
+(defun get-queue-metadata (queue-name &key (account *storage-account*))
+  ""
+  (multiple-value-bind (body status headers)
+      (get-queue-metadata-raw queue-name :account account)
+    headers))
 
-;; set-queue-metadata
+(defun approximate-messages-count (queue-name &key (account *storage-account*))
+  "Returns the approximate number of messages on the given queue"
+  (nth-value 0 (parse-integer 
+   (cdr (assoc :X-MS-APPROXIMATE-MESSAGES-COUNT (get-queue-metadata queue-name :account account))))))
 
+;; TODO set-queue-metadata
 
 (defparameter *put-message-template*
 "<QueueMessage>
@@ -83,28 +105,42 @@
   (format nil *put-message-template* message))
 
 (defun put-message-raw (queue-name message &key (account *storage-account*))
-  ""
+  "The Put Message operation adds a new message to the back of the message queue"
   (queue-storage-request :post (format nil "/~a/messages" queue-name) :account account :content (put-message-content message)))
 
 (defun put-message (queue-name message &key (account *storage-account*))
-  ""
+  "The Put Message operation adds a new message to the back of the message queue."
   (multiple-value-bind (body status)
       (put-message-raw queue-name message :account account)
     (eql status +http-created+)))
 
-(defun get-message-raw (queue-name &key (account *storage-account*))
-  ""
+(defun get-messages-raw (queue-name &key (account *storage-account*))
+  "The Get Messages operation retrieves one or more messages from the front of the queue"
   (queue-storage-request :get (format nil "/~a/messages" queue-name) :account account))
 
-(defun get-message (queue-name &key (account *storage-account*))
-  ""
-  (first (extract-rows (get-message-raw queue-name :account account) "QueueMessage")))
+(defun get-messages (queue-name &key (account *storage-account*))
+  "The Get Messages operation retrieves one or more messages from the front of the queue"
+  (extract-rows (get-messages-raw queue-name :account account) "QueueMessage"))
 
+(defun peek-messages-raw (queue-name &key (account *storage-account*))
+  "This operation retrieves one or more messages from the front of the queue, but does not alter the visibility of the message."
+  (queue-storage-request :get (format nil "/~a/messages?peekonly=true" queue-name) :account account))
 
-;; peek-message
+(defun peek-messages (queue-name &key (account *storage-account*))
+  "This operation retrieves one or more messages from the front of the queue, but does not alter the visibility of the message."
+  (extract-rows (peek-messages-raw queue-name :account account) "QueueMessage"))
 
-;; delete-message
+(defun delete-message-raw (queue-name message-id pop-receipt &key (account *storage-account*))
+  "The Delete Message operation deletes the specified message"
+  (queue-storage-request :delete 
+			 (format nil "/~a/messages/~a?popreceipt=~a" queue-name  message-id pop-receipt) 
+			 :account account))
 
+(defun delete-message (queue-name message &key (account *storage-account*))
+  "Deletes a message from a queue"
+  (multiple-value-bind (body status)
+      (delete-message-raw queue-name (message-id message) (pop-receipt message) :account account)
+    (eql status +http-no-content+)))
 
 (defun clear-messages-raw (queue-name &key (account *storage-account*))
   "The Clear Messages operation deletes all messages from the specified queue."

@@ -29,8 +29,11 @@
   (let ((url (puri:parse-uri (concatenate 'string "/" (account-name account) resource ))))
     (concatenate 'string  
 		 (puri:uri-path url)
-		 (when (search "comp" (puri:uri-query url))
-		   "?comp=list"))))
+		 (when (search "comp=list" (puri:uri-query url))
+		   "?comp=list")
+		 (when (search "comp=metadata" (puri:uri-query url))
+		   "?comp=metadata")
+		 )))
 
 (defun canonicalised-headers (date)
   "Return canonicalised headers using 2009-09-19 Shared Key Lite and Table Service Format"

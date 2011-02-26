@@ -45,18 +45,6 @@
   "Enumerates the tables in a storage account"
   (extract-tables (query-tables-raw :account account)))
 
-(defun extract-rows (response)
-  "Extracts a list of rows from an ADO.NET entity set Atom feed"
-  (klacks:with-open-source (source (cxml:make-source response))
-    (loop 
-       while (klacks:find-element source "properties")
-       collect 
-       (loop
-	  while (find-next-child source)
-	  collecting (cons (intern (klacks:current-lname source))
-			   (progn (klacks:peek-next source)
-				  (klacks:current-characters source)))))))
-
 (defun query-entities-raw (table-name &key (account *storage-account*)
 			   (partition-key nil) 
 			   (row-key nil) 
@@ -74,7 +62,7 @@
 				  :account account 
 				  :partition-key partition-key 
 				  :row-key row-key 
-				  :filter filter)))
+				  :filter filter) "properties"))
 
 (defparameter *create-table-template*
   "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>   

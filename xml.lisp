@@ -28,3 +28,15 @@
   (let ((source (cxml:make-source doc))
 	(handler (cxml:make-character-stream-sink stream :indentation 1)))
     (klacks:serialize-source source handler)))
+
+(defun extract-rows (response rowname)
+  ""
+  (klacks:with-open-source (source (cxml:make-source response))
+    (loop 
+       while (klacks:find-element source rowname)
+       collect 
+       (loop
+	  while (find-next-child source)
+	  collecting (cons (intern (klacks:current-lname source))
+			   (progn (klacks:peek-next source)
+				  (klacks:current-characters source)))))))

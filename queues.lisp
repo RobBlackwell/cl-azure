@@ -33,17 +33,17 @@
   "Makes an HTTP request to the Queue storage API"
   (let* ((date (rfc1123-date-time-string))
 	 (headers (remove nil (list 
-		   (authorization-header (account-name account)
-					 (hmac-string (account-key account) 
-						      (queue-service-string-to-sign 
-						       method 
-						       (canonicalised-headers date)
-						       (canonicalise-resource resource account))))
-		   (cons "x-ms-date" date)
-		   (cons "x-ms-version" "2009-09-19")
-		   (when (eq method :put) 
-		     (cons "content-length" "0")) ;; PUT needs this to be set explicitly for some reason?
-		   ))))
+			       (authorization-header (account-name account)
+						     (hmac-string (account-key account) 
+								  (queue-service-string-to-sign 
+								   method 
+								   (canonicalised-headers date)
+								   (canonicalise-resource resource account))))
+			       (cons "x-ms-date" date)
+			       (cons "x-ms-version" "2009-09-19")
+			       (when (eq method :put) 
+				 (cons "content-length" "0")) ;; PUT needs this to be set explicitly for some reason?
+			       ))))
 
     (drakma:http-request (concatenate 'string (queue-storage-url account) resource)
 			 :method method
@@ -80,7 +80,8 @@
     (eql status +http-no-content+)))
 
 (defun get-queue-metadata-raw (queue-name &key (account *storage-account*))
-  "The Get Queue Metadata operation retrieves user-defined metadata and queue properties on the specified queue. Metadata is associated with the queue as name-values pairs."
+  "The Get Queue Metadata operation retrieves user-defined metadata and queue properties on the specified queue. 
+Metadata is associated with the queue as name-values pairs."
   (queue-storage-request :get (format nil "/~a?comp=metadata" queue-name) :account account))
 
 (defun get-queue-metadata (queue-name &key (account *storage-account*))
@@ -123,11 +124,13 @@
   (extract-rows (get-messages-raw queue-name :account account) "QueueMessage"))
 
 (defun peek-messages-raw (queue-name &key (account *storage-account*))
-  "This operation retrieves one or more messages from the front of the queue, but does not alter the visibility of the message."
+  "This operation retrieves one or more messages from the front of the queue, 
+but does not alter the visibility of the message."
   (queue-storage-request :get (format nil "/~a/messages?peekonly=true" queue-name) :account account))
 
 (defun peek-messages (queue-name &key (account *storage-account*))
-  "This operation retrieves one or more messages from the front of the queue, but does not alter the visibility of the message."
+  "This operation retrieves one or more messages from the front of the queue, 
+but does not alter the visibility of the message."
   (extract-rows (peek-messages-raw queue-name :account account) "QueueMessage"))
 
 (defun delete-message-raw (queue-name message-id pop-receipt &key (account *storage-account*))

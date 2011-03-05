@@ -151,3 +151,10 @@
   (table-storage-request :post (format nil "/~a" table-name) :account account :content (entity-content entity)))
 
 ;; (insert-entity-raw "People" '((|PartitionKey| 3)(|RowKey| 4)("Name" "Robert") ("Age" 21 |Edm.Int32|)))
+
+
+;; update entity
+
+;; merge entity
+
+;; delete entity

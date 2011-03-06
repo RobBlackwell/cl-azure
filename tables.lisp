@@ -140,8 +140,8 @@
 
 (defun properties-xml (entity)
   (with-output-to-string (stream)
-    (dolist (property entity)
-      (format stream (property-xml (first property) (second property) (third property))))))
+    (loop for x on entity by #'cddr do
+      (format stream (property-xml (first x) (to-edm-string (second x)) (edm-type-description (second x)))))))
 
 (defun entity-content (entity)
   (format nil *insert-entity-template* (iso8601-date-time-string) (properties-xml entity)))
@@ -150,7 +150,7 @@
   "The Insert Entity operation inserts a new entity into a table"
   (table-storage-request :post (format nil "/~a" table-name) :account account :content (entity-content entity)))
 
-;; (insert-entity-raw "People" '((|PartitionKey| 3)(|RowKey| 4)("Name" "Robert") ("Age" 21 |Edm.Int32|)))
+;;(insert-entity-raw "People" '(|PartitionKey| 55 |RowKey| 4 "Name" "Robert" "Age" 21 ))
 
 
 ;; update entity

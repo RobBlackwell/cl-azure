@@ -83,11 +83,11 @@
     (eql status +http-accepted+)))
 
 (defun get-blob-raw (container-name blob-name &key (account *storage-account*))
-  ""
+  "The Get Blob operation reads or downloads a blob from the system, including its metadata and properties. You can also call Get Blob to read a snapshot."
   (blob-storage-request :get (format nil "/~a/~a" container-name blob-name) :account account))
 
 (defun get-blob (container-name blob-name &key (account *storage-account*))
-  ""
+  "Returns a byte array representing the contents of the specified blob"
   (nth-value 0 (get-blob-raw container-name blob-name :account account)))
 
 (defun get-blob-text (container-name blob-name &key (account *storage-account*))
@@ -112,11 +112,9 @@
 
 ;; put-blob
 
-;; get-blob
-
 ;; get-blob-properties
 
-;; set-lob-properties
+;; set-blob-properties
 
 ;; get-blob-metadata
 

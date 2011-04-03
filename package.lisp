@@ -15,8 +15,21 @@
   ;; Blobs
   (:export
    #:list-containers
-   #:list-blobs)
+   #:list-blobs
+   #:delete-blob
+   #:create-container
+   #:delete-container
+   #:get-blob)
   ;; Queues
   (:export
-   #:list-queues))
+   #:list-queues
+   #:create-queue
+   #:delete-queue
+   #:get-queue-metadata
+   #:approximate-messages-count
+   #:put-message
+   #:get-messages
+   #:peek-messages
+   #:delete-message
+   #:clear-messages))
 

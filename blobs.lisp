@@ -48,9 +48,9 @@
   "Makes a list-blobs REST call to Azure Blob Storage"
   (blob-storage-request :get (concatenate 'string "/" container "?restype=container&comp=list") :account account))
 
-(defun list-blobs (blob &key (account *storage-account*))
+(defun list-blobs (container &key (account *storage-account*))
   "Enumerates the blobs in a storage account"
-  (extract-named-elements (list-blobs-raw blob :account account) "Name"))
+  (extract-named-elements (list-blobs-raw container :account account) "Name"))
 
 (defun delete-blob-raw (container-name blob-name &key (account *storage-account*))
   "Deletes a blob"
@@ -88,11 +88,22 @@
 
 (defun get-blob (container-name blob-name &key (account *storage-account*))
   "Returns a byte array representing the contents of the specified blob"
-  (nth-value 0 (get-blob-raw container-name blob-name :account account)))
+  (multiple-value-bind (body status)
+      (get-blob-raw container-name blob-name :account account)
+    (when (eql status +http-ok+)
+      body)))
+
+(defconstant +utf8-bom+ (vector #xEF #xBB #xBF) "Byte Order Mark for UTF-8")
+
+(defun my-utf8-bytes-to-string (bytes)
+  "Convert a byte array to a UTF-8 string, skipping the byte order mark if necessary"
+  (if (equalp (subseq bytes 0 3) +utf8-bom+)
+      (babel:octets-to-string bytes :start 3 :encoding :utf-8)
+      (babel:octets-to-string bytes :encoding :utf-8)))
 
 (defun get-blob-text (container-name blob-name &key (account *storage-account*))
   ""
-  (trivial-utf-8:utf-8-bytes-to-string (get-blob container-name blob-name :account account)))
+  (my-utf8-bytes-to-string (get-blob container-name blob-name :account account)))
 
 ;(defun get-blob-file (container-name blob-name file-name &key (account *storage-account*))
 ;  ""

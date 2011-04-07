@@ -115,12 +115,14 @@
   (:documentation ""))
 
 (defmethod to-edm-string ((self edm-binary))
-  (trivial-utf-8:utf-8-bytes-to-string (value self)))
+  ;;(trivial-utf-8:utf-8-bytes-to-string (value self))
+  (babel:octets-to-string (value self) :encoding :utf-8))
 
 (defun make-edm-binary (value)
   (if (stringp value)
-       (make-instance 'edm-binary :value (trivial-utf-8:string-to-utf-8-bytes value))
-       (make-instance 'edm-binary :value value)))
+      ;;(make-instance 'edm-binary :value (trivial-utf-8:string-to-utf-8-bytes value))
+      (make-instance 'edm-binary :value (babel:string-to-octets value :encoding :utf-8))
+      (make-instance 'edm-binary :value value)))
 
 (defun make-edm-object (object &optional (edm-description nil))
   ""

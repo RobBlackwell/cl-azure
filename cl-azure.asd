@@ -9,7 +9,7 @@
                #:ironclad
                #:cxml
                #:cl-base64
-               #:trivial-utf-8
+	       #:babel
 	       #:puri)
   :components ((:file "package")
 	       (:file "util")

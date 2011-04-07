@@ -10,7 +10,8 @@
 
 (defun utf8 (string)
   "Converts a string to UTF8"
-  (trivial-utf-8:string-to-utf-8-bytes string))
+  ;;(trivial-utf-8:string-to-utf-8-bytes string)
+  (babel:string-to-octets string :encoding :utf-8))
 
 (defun hmac-string (key string)
   "Computes a Hash-based Message Authentication Code (HMAC) from string using the SHA256 algorithm"

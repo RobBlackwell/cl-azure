@@ -4,7 +4,8 @@
   (:use #:cl)
   (:shadow "DEFCONSTANT")
   (:export
-   #:*storage-account*)
+   #:*storage-account*
+   #:account-from-environment)
   ;; Tables
   (:export
    #:query-tables

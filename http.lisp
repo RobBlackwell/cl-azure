@@ -1,7 +1,106 @@
 ;;;; http.lisp
-;;;; Copyright (c) 2011, Rob Blackwell.  All rights reserved.
+;;;; Copyright (c) 2011 - 2012, Rob Blackwell.  All rights reserved.
 
 (in-package #:cl-azure)
+
+;; Model the HTTP Protocol as specified in RFC2616
+
+;; Request
+
+(defgeneric request-method (request) (:documentation "Returns the request method from an HTTP request."))
+(defgeneric request-uri (request) (:documentation "Returns the uri from an HTTP request."))
+(defgeneric request-headers (request) (:documentation "Returns the headers from an HTTP request."))
+(defgeneric request-body (request) (:documentation "Returns the body from an HTTP request."))
+
+;; Response
+
+(defgeneric response-status (response) (:documentation "Returns the status code from an HTTP response."))
+(defgeneric response-body (response) (:documentation "Returns the body from an HTTP response."))
+(defgeneric response-headers (response) (:documentation "Returns the headers from an HTTP response."))
+
+;; Provide a default implementation of the model based on a plist
+
+;; Request
+
+(defmethod request-method ((request cons))
+  (getf request :method))
+
+(defmethod request-uri ((request cons))
+  (getf request :uri))
+
+(defmethod request-headers ((request cons))
+  (getf request :headers))
+
+(defmethod request-body ((request cons))
+  (getf request :body))
+
+;; Response
+
+(defmethod response-status ((response cons))
+  (getf response :status))
+
+(defmethod response-headers ((response cons))
+  (getf response :headers))
+
+(defmethod response-body ((response cons))
+  (getf response :body))
+
+;; headers modelled as alists
+
+(defun get-header (headers name)
+  ""
+  (rest (assoc name headers :test #'string=)))
+
+(defun add-header (request header)
+  ""
+  (merge-plist request (list :headers (cons header (request-headers request)))))
+
+;; Add the notion of a client certificate to http-requests
+(defgeneric request-client-certificate (request))
+
+(defmethod request-client-certificate ((request cons))
+  (getf request :certificate))
+
+;; Define a protocol for interacting with X509 client certificates
+
+(defgeneric client-certificate-certificate (client-certificate))
+(defgeneric client-certificate-key (client-certificate))
+(defgeneric client-certificate-pass-phrase (client-certificate))
+
+;; And a simple default implementation
+
+(defmethod client-certificate-certificate ((client-certificate cons))
+  (getf client-certificate :certificate))
+
+(defmethod client-certificate-key ((client-certificate cons))
+  (getf client-certificate :key))
+
+(defmethod client-certificate-pass-phrase ((client-certificate cons))
+  (getf client-certificate :pass-phrase))
+
+;; Drakma Implementation
+
+(defun web-request (request)
+  "Uses Drakma to make the specificed http request."
+  (setf *foo* request)
+  (if (request-client-certificate request)
+      (multiple-value-bind  (body status headers)
+	  (drakma:http-request (request-uri request) 
+			       :method (request-method request) 
+			       :additional-headers (request-headers request) 
+			       :content (request-body request)
+			       :certificate (client-certificate-certificate (request-client-certificate request))
+			       :key (client-certificate-key (request-client-certificate request))
+			       :certificate-password (client-certificate-pass-phrase (request-client-certificate request)))
+	(list :body body :status status :headers headers))
+      (multiple-value-bind  (body status headers)
+	  (drakma:http-request (request-uri request) 
+			       :method (request-method request) 
+			       :additional-headers (request-headers request) 
+			       :content (request-body request))
+	(list :body body :status status :headers headers))))
+
+;; HTTP Status codes
 
 (defconstant +http-continue+ 100 "Continue")
 (defconstant +http-switching-protocols+ 101 "Switching Protocols")

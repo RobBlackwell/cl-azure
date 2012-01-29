@@ -1,68 +1,72 @@
 ;;;; tables.lisp
-;;;; Copyright (c) 2011, Rob Blackwell.  All rights reserved.
+;;;; Copyright (c) 2011 - 2012, Rob Blackwell.  All rights reserved.
 
 (in-package #:cl-azure)
 
 ;;; See Windows Azure Storage Services REST API Reference
 ;;; http://msdn.microsoft.com/en-us/library/dd179355.aspx
 
-(defun table-service-string-to-sign (date-time canonicalized-resource)
-  "Returns the string to sign for the Table service (Shared Key Lite Authentication)"
-  (concatenate 'string date-time 
-	       +linefeed+ 
-	       canonicalized-resource))
+(defun sign-table-storage-request (request)
+  "Signs a table storage request by computing a shared key signature and adding a corresponding Authorization header."
+  (let* ((str (string-to-sign-2 request))
+	 (account (request-account request))
+	 (key (account-key account)))
+    (add-header request
+		(shared-key-authorization-header (account-name account)
+						 (hmac-string key str)))))
 
-(defun table-storage-request (method resource &key (account *storage-account*) (content nil))
-  "Makes an HTTP request to the Table storage API"
-  (let* ((date (rfc1123-date-time-string))
-	 (headers (list 
-		   (authorization-header (account-name account)
-					 (hmac-string (account-key account) 
-						      (table-service-string-to-sign date 
-										    (canonicalise-resource resource account))))
-		   (cons "x-ms-date" date)
-		   (cons "x-ms-version" "2009-09-19")
-		   
-		   (cons "DataServiceVersion" "1.0;NetFx") ; Needed for 2009-09-19
-		   (cons "MaxDataServiceVersion" "2.0;NetFx") ; Needed for 2009-09-19
-		   )))   
+(defun table-storage-request (method resource &key (account *storage-account*) 
+			      (content nil) 
+			      (headers nil)
+			      (handler #'identity))
+  "Makes an HTTP request to the Table storage API."
+  (funcall handler
+	   (web-request 
+	    (setf *foo*
+		  (sign-table-storage-request 
+		   (list :method method 
+			 :uri (format nil "~a~a" (table-storage-url account) resource)
+			 :headers (acons "x-ms-date" (rfc1123-date-time-string)
+					 (acons "x-ms-version" "2011-08-18"
+						(acons "DataServiceVersion" "1.0;NetFx" ; Needed for 2009-09-19
+						       (acons "MaxDataServiceVersion" "2.0;NetFx" ; Needed for 2009-09-19
+							      headers))))
+			 :body content
+			 :account account))))))
 
-    (drakma:http-request (concatenate 'string (table-storage-url account) resource)
-			 :method method
-			 :content content
-			 :content-type "application/atom+xml"
-			 :additional-headers headers)))
+(defun list-tablename-elements-handler (response)
+  "Extracts a list of tables from an ADO.NET entity set Atom feed response body."
+  (if (eq (response-status response) +HTTP-OK+)
+    (extract-named-elements (response-body response) "TableName")
+    (windows-azure-error response)))
 
-(defun extract-tables (response)
-  "Extracts a list of tables from an ADO.NET entity set Atom feed"
-  (extract-named-elements response "TableName"))
+(defun query-tables (&key (account *storage-account*) (handler #'list-tablename-elements-handler))
+  "Enumerates the tables in a storage account."
+  (table-storage-request :get "/Tables()" 
+			 :account account 
+			 :handler handler))
 
-(defun query-tables-raw (&key (account *storage-account*))
-  "Makes a Query Tables REST call to Azure Table Storage"
-  (table-storage-request :get "/Tables()" :account account))
-
-(defun query-tables (&key (account *storage-account*))
-  "Enumerates the tables in a storage account"
-  (extract-tables (query-tables-raw :account account)))
-
-(defun query-entities-raw (table-name &key (account *storage-account*)
-			   (partition-key nil) 
-			   (row-key nil) 
-			   (filter nil))
-  "Makes a Query Entities REST call to Azure Table Storage"
-  (let ((filter-expression (if filter (format nil "?$filter=~a" filter) "")))
-    (table-storage-request :get (concatenate 'string "/" table-name "()" filter-expression) :account account)))
+(defun rows-handler (response)
+  "Extracts a list of table rows from an HTTP Response."
+  (if (eq (response-status response) +HTTP-OK+)
+    (extract-rows (response-body response) "properties")
+    (windows-azure-error response)))
 
 (defun query-entities (table-name &key (account *storage-account*)
 		       (partition-key nil) 
 		       (row-key nil) 
-		       (filter nil))
-  "Queries data in a table returning rows as a list of alists"
-  (extract-rows (query-entities-raw table-name 
-				  :account account 
-				  :partition-key partition-key 
-				  :row-key row-key 
-				  :filter filter) "properties"))
+		       (filter nil)
+		       (select nil)
+		       (handler #'rows-handler))
+  "Queries data in a table."
+  (let ((partition-key-expression (if partition-key (format nil "PartitionKey='~a'" partition-key) ""))
+	(row-key-expression (if row-key (format nil ",RowKey='~a'" row-key) ""))
+	(filter-expression (if filter (format nil "?$filter=~a" filter) ""))
+	(select-expression (if select (format nil "&?$select=~a" select) "")))
+    (table-storage-request :get (concatenate 'string "/" table-name "(" partition-key-expression row-key-expression ")"
+					     filter-expression select-expression) 
+			   :account account
+			   :handler handler)))
 
 (defparameter *create-table-template*
   "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>   
@@ -82,31 +86,24 @@
       </content> 
     </entry>")
 
-(defun create-table-raw (table-name &key (account *storage-account*))
-  "The Create Table operation creates a new table in the storage account."
-  (table-storage-request :post "/Tables" :account account :content (format nil *create-table-template* table-name)))
+(defun create-table (table-name &key (account *storage-account*) (handler #'created-handler))
+  "Creates a table."
+  (let ((content (format nil *create-table-template* table-name)))
+    (table-storage-request :post "/Tables" 
+			   :account account 
+			   :headers (list (cons "Content-Type" "application/atom+xml"))
+			   :content content
+			   :handler handler)))
 
-(defun create-table (table-name &key (account *storage-account*))
-  "Creates a table withte gie name, returns T on success, nil otherwise"
-(multiple-value-bind (body status)
-      (create-table-raw table-name :account account)
-    (eql status +http-created+)))
+(defun ensure-table (table-name &key (account *storage-account*) (handler #'ensure-created-handler))
+  "Ensures that a table exists, if necessary creates it."
+  (create-table table-name :account account :handler handler))
 
-(defun ensure-table (table-name &key (account *storage-account*))
-  "Ensures the table exists, if necessary creating it"
-  (multiple-value-bind (body status)
-      (create-table-raw table-name :account account)
-    (when (member status (list +http-created+ +http-conflict+)) status)))
-
-(defun delete-table-raw (table-name &key (account *storage-account*))
-  "The Delete Table operation deletes the specified table and any data it contains."
-  (table-storage-request :delete (format nil "/Tables('~a')" table-name) :account account ))
-
-(defun delete-table (table-name &key (account *storage-account*))
-  "Deletes the specified table and any data it contains, return T on success, NIL otherwise"
-  (multiple-value-bind (body status)
-      (delete-table-raw table-name :account account)
-    (eql status +http-no-content+)))
+(defun delete-table (table-name &key (account *storage-account*) (handler #'no-content-handler))
+  "Deletes the specified table and any data it contains."
+  (table-storage-request :delete (format nil "/Tables('~a')" table-name) 
+			 :account account
+			 :handler handler))
 
 (defparameter *insert-entity-template*
   "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>
@@ -139,18 +136,24 @@
       (format nil "<d:~a~a>~a</d:~a>" tag-name (type-xml type) value tag-name)))
 
 (defun properties-xml (entity)
+  ""
   (with-output-to-string (stream)
     (loop for x on entity by #'cddr do
       (format stream (property-xml (first x) (to-edm-string (second x)) (edm-type-description (second x)))))))
 
 (defun entity-content (entity)
+  ""
   (format nil *insert-entity-template* (iso8601-date-time-string) (properties-xml entity)))
   
-(defun insert-entity-raw (table-name entity &key (account *storage-account*))
-  "The Insert Entity operation inserts a new entity into a table"
-  (table-storage-request :post (format nil "/~a" table-name) :account account :content (entity-content entity)))
+(defun insert-entity (table-name entity &key (account *storage-account*) (handler #'created-handler))
+  "Inserts a new entity into a table."
+  (table-storage-request :post (format nil "/~a" table-name) 
+			 :account account 
+			 :headers (acons "Content-Type" "application/atom+xml" nil)
+			 :content (entity-content entity)
+			 :handler handler))
 
-;;(insert-entity-raw "People" '(|PartitionKey| 55 |RowKey| 4 "Name" "Robert" "Age" 21 ))
+;; E.g. (insert-entity "People" '(|PartitionKey| 55 |RowKey| 4 "Name" "Robert" "Age" 21 ))
 
 
 ;; update entity

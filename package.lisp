@@ -1,6 +1,8 @@
 ;;;; package.lisp
+;;;; Copyright (c) 2011 - 2012, Rob Blackwell.  All rights reserved.
 
 (defpackage #:cl-azure
+  (:nicknames "WA")
   (:use #:cl)
   (:shadow "DEFCONSTANT")
   (:export
@@ -12,7 +14,8 @@
    #:create-table
    #:ensure-table
    #:delete-table
-   #:query-entities)
+   #:query-entities
+   #:insert-entity)
   ;; Blobs
   (:export
    #:list-containers
@@ -20,7 +23,10 @@
    #:delete-blob
    #:create-container
    #:delete-container
-   #:get-blob)
+   #:get-blob
+   #:get-blob-string
+   #:get-blob-file
+   #:put-blob)
   ;; Queues
   (:export
    #:list-queues
@@ -32,5 +38,10 @@
    #:get-messages
    #:peek-messages
    #:delete-message
-   #:clear-messages))
+   #:clear-messages)
+  ;; Management
+  (:export
+   #:list-storage-accounts
+   #:list-hosted-services
+   #:list-certificates))
 

@@ -1,5 +1,5 @@
 ;;;; account.lisp
-;;;; Copyright (c) 2011, Rob Blackwell.  All rights reserved.
+;;;; Copyright (c) 2011 - 2012, Rob Blackwell.  All rights reserved.
 
 (in-package #:cl-azure)
 
@@ -83,4 +83,10 @@
 	  :queue-storage-url 
 	  (format nil "http://~a.queue.core.windows.net" account-name))))
   
-  
+ ;;;
+
+;; Add the notion of storage account to http-requests
+(defgeneric request-account (request))
+
+(defmethod request-account ((request cons))
+  (getf request :account))

@@ -1,7 +1,9 @@
 ;;;; edm.lisp
-;;;; Copyright (c) 2011, Rob Blackwell.  All rights reserved.
+;;;; Copyright (c) 2011 - 2012, Rob Blackwell.  All rights reserved.
 
 (in-package #:cl-azure)
+
+;;; Entity Data Model support for Common Lisp.
 
 ;;; Conceptual schema definition language (CSDL) supports a set of
 ;;; abstract primitive data types, called EDMSimpleTypes, that define
@@ -120,7 +122,6 @@
 
 (defun make-edm-binary (value)
   (if (stringp value)
-      ;;(make-instance 'edm-binary :value (trivial-utf-8:string-to-utf-8-bytes value))
       (make-instance 'edm-binary :value (babel:string-to-octets value :encoding :utf-8))
       (make-instance 'edm-binary :value value)))
 

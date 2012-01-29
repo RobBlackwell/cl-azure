@@ -1,5 +1,5 @@
 ;;;; datetime.lisp
-;;;; Copyright (c) 2011, Rob Blackwell.  All rights reserved.
+;;;; Copyright (c) 2011 - 2012, Rob Blackwell.  All rights reserved.
 
 (in-package #:cl-azure)
 
@@ -10,7 +10,7 @@
     #("Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"))
 
 (defun rfc1123-date-time-string (&optional (time (get-universal-time)))
-  "Returns RFC1123 compliant dates, e.g. Sun, 11 Oct 2009 21:49:13 GMT"
+  "Returns an RFC1123 compliant date, e.g. Sun, 11 Oct 2009 21:49:13 GMT."
   (multiple-value-bind
 	(second minute hour date month year day-of-week)
       (decode-universal-time time 0)
@@ -24,7 +24,7 @@
 	    second)))
 
 (defun iso8601-date-time-string (&optional (time (get-universal-time)))
-  "Returns a ISO8601 compliant dates, e.g. 2011-02-20T14:51:22Z"
+  "Returns an ISO8601 compliant date, e.g. 2011-02-20T14:51:22Z."
   (multiple-value-bind 
 	(second minute hour day month year day-of-week)
       (decode-universal-time time 0)

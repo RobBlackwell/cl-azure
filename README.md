@@ -21,9 +21,9 @@ Use Quicklisp to load cl-azure
 You then need to specify your account details. One way to do this is
 to create a LISP file, say myaccount.lisp like this.
 
-   (in-package #:cl-azure)
+     (in-package #:cl-azure)
 
-   (setf *storage-account* (list :account-name "YOUR_ACCOUNT_NAME"
+     (setf *storage-account* (list :account-name "YOUR_ACCOUNT_NAME"
 				:account-key "YOUR_ACCOUNT_KEY"
 				:table-storage-url 
 				"http://YOUR_ACCOUNT_NAME.table.core.windows.net"
@@ -38,16 +38,16 @@ From there you're ready to explore
      ("$root" "azurerunme" "azurerunme-files" "certs" "drives" "dump" "old"
       "oldpackages" "packages" "printer" "public" "test" "wad-control-container")
 
-      WA> (list-blobs "packages")
-      ("AzureRunMe.cspkg" "AzureRunMe.cspkg.sun" "AzureRunMe.cspkg.xxxx"
-      "AzureRunMe.cspkg.yyy" "PsTools.zip" "RobBlackwell.cscfg" "adplus.zip"
-      "apache-tomcat-6.0.28-windows-x64.zip" "apache-tomcat-7.0.12-windows-x64.zip"
-      "clisp-2.49.zip" "dictionarybk" "examples.zip" "jboss-as-web-7.0.0.Final.zip"
-      "jdk1.6.0_21.zip" "jdk1.6.0_24.zip" "robblackwell.bat" "runme.zip"
-      "telnetd.zip")
+     WA> (list-blobs "packages")
+     ("AzureRunMe.cspkg" "AzureRunMe.cspkg.sun" "AzureRunMe.cspkg.xxxx"
+     "AzureRunMe.cspkg.yyy" "PsTools.zip" "RobBlackwell.cscfg" "adplus.zip"
+     "apache-tomcat-6.0.28-windows-x64.zip" "apache-tomcat-7.0.12-windows-x64.zip"
+     "clisp-2.49.zip" "dictionarybk" "examples.zip" "jboss-as-web-7.0.0.Final.zip"
+     "jdk1.6.0_21.zip" "jdk1.6.0_24.zip" "robblackwell.bat" "runme.zip"
+     "telnetd.zip")
 
-    	WA> (list-queues)
-	("foo" "wibble" "worker-queue")
+     WA> (list-queues)
+     ("foo" "wibble" "worker-queue")
 
 
 If you want to use the Windows Azure Management API, then you'll need a pfx certificate.

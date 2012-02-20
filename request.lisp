@@ -124,13 +124,30 @@ corresponding alist of name/value pairs."
 		 (or (get-header headers "Date") (get-header headers "x-ms-date")) +linefeed+
 		 (canonicalized-resource-2 request))))
 
-;; (defun web-request (request)
-;;   "Uses Drakma to make the specificed http request."
-;;   (setf *request* request)
-;;   (multiple-value-bind  (body status headers)
-;;       (drakma:http-request (request-uri request) :method (request-method request) 
-;; 			   :additional-headers (request-headers request) 
-;; 			   :content-type (get-header (request-headers request) "Content-Type")
-;; 			   :content-length (get-header (request-headers request) "Content-Length")
-;; 			   :content (request-body request))
-;;     (list :body body :status status :headers headers)))
+;; Broowed from ZS3
+(defun url-decode (string)
+  (with-output-to-string (out)
+    (let ((code 0))
+      (labels ((in-string (char)
+                 (case char
+                   (#\%
+                    #'h1)
+                   (t
+                    (write-char char out)
+                    #'in-string)))
+               (weight (char)
+                 (let ((weight (digit-char-p char 16)))
+                   (unless weight
+                     (error "~S is not a hex digit" char))
+                   weight))
+               (h1 (char)
+                 (setf code (ash (weight char) 4))
+                 #'h2)
+               (h2 (char)
+                 (incf code (weight char))
+                 (write-char (code-char code) out)
+                 #'in-string))
+        (let ((state #'in-string))
+          (loop for char across string
+                do (setf state (funcall state char))))))))
+

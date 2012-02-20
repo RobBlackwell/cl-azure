@@ -87,6 +87,7 @@
       (multiple-value-bind  (body status headers)
 	  (drakma:http-request (request-uri request) 
 			       :method (request-method request) 
+			       :content-type nil
 			       :additional-headers (request-headers request) 
 			       :content (request-body request)
 			       :certificate (client-certificate-certificate (request-client-certificate request))
@@ -96,6 +97,7 @@
       (multiple-value-bind  (body status headers)
 	  (drakma:http-request (request-uri request) 
 			       :method (request-method request) 
+			       :content-type nil
 			       :additional-headers (request-headers request) 
 			       :content (request-body request))
 	(list :body body :status status :headers headers))))

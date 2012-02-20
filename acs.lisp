@@ -8,23 +8,19 @@
 ;; http://msdn.microsoft.com/en-us/library/windowsazure/ee706734.aspx
 
 (defparameter *plaintext-token-request-body-template*
-"
-wrap_scope=~a&
-wrap_name=~a&
-wrap_password=~a
-")
+"wrap_scope=~a&wrap_name=~a&wrap_password=~a")
 
-;; Not yet working?
-
-(defun plaintext-token-request (wrap-scope wrap-name wrap-password &key (handler #'identity))
-  ""
+(defun plaintext-token-request (acs-url wrap-scope wrap-name wrap-password &key (handler #'identity))
+  "Requests a token from the Access Control Service."
   (funcall handler
-	   (web-request (list
-			 :method :post 
-			 :uri (format nil "https://robblackwell.accesscontrol.windows.net/WRAPv0.9/")  
-			 :body (format nil *plaintext-token-request-body-template*
-				       wrap-scope wrap-name (base64:string-to-base64-string wrap-password))
-			 :headers (acons "Content-type" "application/x-www-form-urlencoded" nil)))))
+	   (web-request (print (list
+				:method :post 
+				:uri (format nil "~a/WRAPv0.9/" acs-url)  
+				:body (format nil *plaintext-token-request-body-template*
+					      (drakma::url-encode wrap-scope :utf-8)
+					      (drakma::url-encode wrap-name :utf-8)
+					      (drakma::url-encode wrap-password :utf-8))
+				:headers (acons "Content-type" "application/x-www-form-urlencoded" nil))))))
 
 
 

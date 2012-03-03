@@ -20,7 +20,7 @@
 					      (drakma::url-encode wrap-scope :utf-8)
 					      (drakma::url-encode wrap-name :utf-8)
 					      (drakma::url-encode wrap-password :utf-8))
-				:headers (acons "Content-type" "application/x-www-form-urlencoded" nil))))))
+				:headers (acons "Content-Type" "application/x-www-form-urlencoded" nil))))))
 
 
 

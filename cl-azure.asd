@@ -28,5 +28,6 @@
 	       (:file "queues")
 	       (:file "manage")
 	       (:file "acs")
+	       (:file "servicebus")
 	       (:file "tests")))
 

@@ -116,9 +116,38 @@ Bus credentials."
   "Enumerates the Service bus topics."
   (funcall handler
 	   (web-request (print (list
-			 :method :get 
-			 :uri (format nil "~a/$Resources/Topics" (servicebus-url servicebus-credentials))  
-			 :headers (acons "Authorization" (token
-  servicebus-credentials) nil))))))
+				:method :get 
+				:uri (format nil "~a/$Resources/Topics" (servicebus-url servicebus-credentials))  
+				:headers (acons "Authorization" (token servicebus-credentials) nil))))))
 
+
+
+(defun servicebus-handler (response)
+  ""
+  (let ((status (response-status response)))
+    (cond 
+      ((eq status +http-ok+) (first (extract-named-elements (response-body response) "content")))
+      ((eq status +http-no-content+) nil))))
+
+
+
+(defun servicebus-peek-lock-queue-message (queue-path  &key (timeout 30) (servicebus-credentials *servicebus-credentials*) (handler #'identity))
+  "Atomically retrieves and locks a message from a queue for processing."
+  (funcall handler
+	   (web-request (list
+			 :method :post
+			 :uri (format nil "~a/~a/messages/head?timeout=~a" (servicebus-url servicebus-credentials) queue-path timeout)  
+			 :headers (acons "Authorization"	(token servicebus-credentials) nil)))))
+
+(defun servicebus-read-and-delete-queue-message (queue-path  &key (timeout 30) (servicebus-credentials *servicebus-credentials*) (handler #'servicebus-handler))
+  "Atomically retrieves and locks a message from a queue for processing."
+  (funcall handler
+	   (web-request (list
+			 :method :delete
+			 :uri (format nil "~a/~a/messages/head?timeout=~a" (servicebus-url servicebus-credentials) queue-path timeout)  
+			 :headers (acons "Authorization"	(token servicebus-credentials) nil)))))
+
+;; Before calling the service bus features, you need to get a token like this ..
 ;; (setf (getf *servicebus-credentials* :token) (get-token))
+
+

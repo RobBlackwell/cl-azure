@@ -70,6 +70,17 @@ Then you can use it like this:
      WA> (list-hosted-services)
      ("azurerunme" "catalina" "claptrap")	
 
+Experimental support for Service Bus Brokered Messaging:
+
+     WA > (setf *servicebus-credentials* (make-servicebus-credentials "namespace" "owner" "key"))
+     ...
+     WA > (setf (getf *servicebus-credentials* :token) (get-token)) 
+     ....
+     WA> (servicebus-send-message "test" "hello world")
+     T
+     WA> (servicebus-read-and-delete-queue-message "test" )
+     "hello world"
+
 Why?
 ----
 

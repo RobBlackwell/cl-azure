@@ -35,8 +35,9 @@
     (loop 
        while (klacks:find-element source rowname)
        collect 
-       (loop
-	  while (find-next-child source)
-	  append (list (intern (klacks:current-lname source) "KEYWORD")
-			   (progn (klacks:peek-next source)
-				  (klacks:current-characters source)))))))
+	 (loop
+	    while (find-next-child source)
+	    append (list (intern (print (klacks:current-lname source)) "KEYWORD")
+			 (if (eq (klacks:peek-next source) :characters)
+			     (klacks:peek-value source)
+			     ""))))))

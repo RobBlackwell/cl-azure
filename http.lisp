@@ -82,7 +82,6 @@
 
 (defun web-request (request)
   "Uses Drakma to make the specificed http request."
-  (setf *foo* request)
   (if (request-client-certificate request)
       (multiple-value-bind  (body status headers)
 	  (drakma:http-request (request-uri request) 

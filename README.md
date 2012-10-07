@@ -1,15 +1,19 @@
 cl-azure
 ========
 
-Access Microsoft Windows Azure cloud storage from Common Lisp.
+Access Microsoft Windows Azure cloud services from Common Lisp.
 
 Introduction
 ------------
 
 Windows Azure is Microsoft's cloud hosting platform. This project is
 an incomplete, proof-of-concept implementation of a Common Lisp
-library for accessing the storage features, namely Blobs, Tables and
-Queues.
+library for accessing the various features including:
+
+Blobs, tables and queues;
+Access Control Service (ACS);
+Service Bus brokered messsaging;
+Media Services.
 
 Instructions
 ------------
@@ -49,8 +53,11 @@ From there you're ready to explore
      WA> (list-queues)
      ("foo" "wibble" "worker-queue")
 
+Management API
+--------------
 
-If you want to use the Windows Azure Management API, then you'll need a pfx certificate.
+If you want to use the Windows Azure Management API, then you'll need
+a pfx certificate.
 
 You'll need to convert it to PEM format like this:
 
@@ -70,7 +77,13 @@ Then you can use it like this:
      WA> (list-hosted-services)
      ("azurerunme" "catalina" "claptrap")	
 
-Experimental support for Service Bus Brokered Messaging:
+Service Bus
+-----------
+
+Experimental support for Service Bus Brokered Messaging. N.B. It seems
+like the relay features are still proprietary and therefore .NET / WCF
+only.
+
 
      WA > (setf *servicebus-credentials* (make-servicebus-credentials "namespace" "owner" "key"))
      ...
@@ -80,6 +93,26 @@ Experimental support for Service Bus Brokered Messaging:
      T
      WA> (servicebus-read-and-delete-queue-message "test" )
      "hello world"
+
+Media Services
+--------------
+
+Experimental support for Media Services.
+
+
+	CL-USER> (ql:quickload "cl-azure")
+	...
+	CL-USER> (setf cl-azure::*media-account* 
+      		 (cl-azure:make-media-account "MY ACCOUNT"
+				   "MY_KEY))
+	...
+        CL-USER> (cl-azure:get-media-processors)
+	...
+        CL-USER> (cl-azure:get-media-assets)
+	...
+        CL-USER> (cl-azure:get-media-jobs)
+	...
+
 
 Why?
 ----
@@ -93,9 +126,15 @@ I hope it demonstrates that [Windows
 Azure](http://www.microsoft.com/windowsazure/) is an open, cross
 platform cloud storage system that isn't tied to Windows or .NET.
 
+It certainly shows that Common Lisp is still suitable for modern
+application development.
+
 It's helped me to understand the Windows Azure API mechanisms, but
 more than that, it turns out to be a useful debugging and
 experimentation tool.
+
+I always get a buzz out of standing up in front of a bunch of C#
+developers and demo'ing it ;-)
 
 Any comments, feedback, constructive criticism or code contributions
 welcome!

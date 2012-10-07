@@ -2,9 +2,9 @@
 ;;;; Copyright (c) 2011 - 2012, Rob Blackwell.  All rights reserved.
 
 (asdf:defsystem #:cl-azure
-  :version "0.2.0"
+  :version "0.2.1"
   :author "Rob Blackwell"
-  :description "Windows Azure support for Common Lisp."
+  :description "A Windows Azure library for Common Lisp."
   :serial t
   :depends-on (#:drakma
                #:ironclad
@@ -13,6 +13,7 @@
 	       #:babel
 	       #:cl-ppcre
 	       #:puri
+	       #:cl-json
 	       #:rt)
   :components ((:file "package")
 	       (:file "util")
@@ -29,5 +30,6 @@
 	       (:file "manage")
 	       (:file "acs")
 	       (:file "servicebus")
+	       (:file "media")
 	       (:file "tests")))
 

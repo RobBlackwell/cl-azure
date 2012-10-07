@@ -43,5 +43,12 @@
   (:export
    #:list-storage-accounts
    #:list-hosted-services
-   #:list-certificates))
+   #:list-certificates)
+  ;; Media
+  (:export
+   #:make-media-account
+   #:get-media-token
+   #:get-media-assets
+   #:get-media-jobs
+   #:get-media-processors))
 

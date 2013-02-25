@@ -1,5 +1,5 @@
 ;;;; tables.lisp
-;;;; Copyright (c) 2011 - 2012, Rob Blackwell.  All rights reserved.
+;;;; Copyright (c) 2011 - 2013, Rob Blackwell.  All rights reserved.
 
 (in-package #:cl-azure)
 
@@ -22,8 +22,7 @@
   "Makes an HTTP request to the Table storage API."
   (funcall handler
 	   (web-request 
-	    (setf *foo*
-		  (sign-table-storage-request 
+	    (sign-table-storage-request 
 		   (list :method method 
 			 :uri (format nil "~a~a" (table-storage-url account) resource)
 			 :headers (acons "x-ms-date" (rfc1123-date-time-string)
@@ -32,7 +31,7 @@
 						       (acons "MaxDataServiceVersion" "2.0;NetFx" ; Needed for 2009-09-19
 							      headers))))
 			 :body content
-			 :account account))))))
+			 :account account)))))
 
 (defun list-tablename-elements-handler (response)
   "Extracts a list of tables from an ADO.NET entity set Atom feed response body."

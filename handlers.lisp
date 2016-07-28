@@ -28,25 +28,25 @@
     (windows-azure-error response)))
 
 (defun created-handler (response)
-  "Returns true if the HTTP response is ok, otheriwse raises an error."
+  "Returns true if the HTTP response is ok, otherwise raises an error."
   (if (eq (response-status response) +http-created+)
       t
       (windows-azure-error response)))
 
 (defun accepted-handler (response)
-  "Returns true if the HTTP response is accepted, otheriwse raises an error."
+  "Returns true if the HTTP response is accepted, otherwise raises an error."
   (if (eq (response-status response) +http-accepted+)
       t
       (windows-azure-error response)))
 
 (defun no-content-handler (response)
-  "Returns true if the HTTP response is no-content, otheriwse raises an error."
+  "Returns true if the HTTP response is no-content, otherwise raises an error."
   (if (eq (response-status response) +http-no-content+)
       t
       (windows-azure-error response)))
 
 (defun ensure-created-handler (response)
-  "returns true if the HTTP response is created, otheriwse raises an error."
+  "returns true if the HTTP response is created, otherwise raises an error."
   (if (member (response-status response) (list +http-created+ +http-conflict+))
       t
       (windows-azure-error response)))
